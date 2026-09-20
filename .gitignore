@@ -26,8 +26,8 @@ env/
 # Generated test data
 # ==========================================================
 
-output/
-data/*.csv
+test_data_generator/output/
+test_data_generator/data/*.csv
 
 # ==========================================================
 # IDE
