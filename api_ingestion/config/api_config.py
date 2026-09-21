@@ -1,0 +1,7 @@
+API_BASE_URL = "https://dummyjson.com"
+
+CARTS_ENDPOINT = f"{API_BASE_URL}/carts"
+
+DEFAULT_PAGE_SIZE = 10
+
+DEFAULT_TIMEOUT_SECONDS = 30
