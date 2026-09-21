@@ -1,0 +1,121 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "factoryName": {
+      "type": "string",
+      "metadata": "Data Factory name"
+    },
+    "VRD_LinkedService": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('factoryName'), '/vrd_abc_retail_pipeline')]",
+      "type": "Microsoft.DataFactory/factories/pipelines",
+      "apiVersion": "2018-06-01",
+      "properties": {
+        "activities": [
+          {
+            "name": "Bronze_Processing",
+            "type": "DatabricksNotebook",
+            "dependsOn": [],
+            "policy": {
+              "timeout": "0.12:00:00",
+              "retry": 2,
+              "retryIntervalInSeconds": 60,
+              "secureOutput": false,
+              "secureInput": false
+            },
+            "userProperties": [],
+            "typeProperties": {
+              "notebookPath": "/Users/<DATABRICKS_USER_EMAIL>/VRD_ABC_Retail_Project/bronze/ingest_sales",
+              "baseParameters": {
+                "processing_date": "@pipeline().parameters.processing_date"
+              }
+            },
+            "linkedServiceName": {
+              "referenceName": "[parameters('VRD_LinkedService')]",
+              "type": "LinkedServiceReference"
+            }
+          },
+          {
+            "name": "Silver_Processing",
+            "type": "DatabricksNotebook",
+            "dependsOn": [
+              {
+                "activity": "Bronze_Processing",
+                "dependencyConditions": [
+                  "Succeeded"
+                ]
+              }
+            ],
+            "policy": {
+              "timeout": "0.12:00:00",
+              "retry": 2,
+              "retryIntervalInSeconds": 60,
+              "secureOutput": false,
+              "secureInput": false
+            },
+            "userProperties": [],
+            "typeProperties": {
+              "notebookPath": "/Users/<DATABRICKS_USER_EMAIL>/VRD_ABC_Retail_Project/silver/process_sales",
+              "baseParameters": {
+                "processing_date": "@pipeline().parameters.processing_date"
+              }
+            },
+            "linkedServiceName": {
+              "referenceName": "[parameters('VRD_LinkedService')]",
+              "type": "LinkedServiceReference"
+            }
+          },
+          {
+            "name": "Gold_Processing",
+            "type": "DatabricksNotebook",
+            "dependsOn": [
+              {
+                "activity": "Silver_Processing",
+                "dependencyConditions": [
+                  "Succeeded"
+                ]
+              }
+            ],
+            "policy": {
+              "timeout": "0.12:00:00",
+              "retry": 2,
+              "retryIntervalInSeconds": 60,
+              "secureOutput": false,
+              "secureInput": false
+            },
+            "userProperties": [],
+            "typeProperties": {
+              "notebookPath": "/Users/<DATABRICKS_USER_EMAIL>/VRD_ABC_Retail_Project/gold/process_gold",
+              "baseParameters": {
+                "processing_date": "@pipeline().parameters.processing_date"
+              }
+            },
+            "linkedServiceName": {
+              "referenceName": "[parameters('VRD_LinkedService')]",
+              "type": "LinkedServiceReference"
+            }
+          }
+        ],
+        "policy": {
+          "elapsedTimeMetric": {}
+        },
+        "parameters": {
+          "processing_date": {
+            "type": "string",
+            "defaultValue": "2026-09-19"
+          }
+        },
+        "annotations": []
+      },
+      "dependsOn": []
+    }
+  ]
+}
